@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{self, Read, Seek, SeekFrom};
+use std::io::{self, Read, Seek, SeekFrom, Write};
 
 /// Builds a `BmpInfoHeader` struct from a file.
 ///
@@ -57,6 +57,24 @@ impl BmpInfoHeader {
         file.read_exact(&mut info_header.important_colours)?;
 
         Ok(info_header)
+    }
+
+    pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
+        file.write(&self.size)?;
+        file.write(&self.width)?;
+        file.write(&self.height)?;
+        file.write(&self.planes)?;
+        file.write(&self.bits_per_px)?;
+        file.write(&self.compression)?;
+        file.write(&self.image_size)?;
+        file.write(&self.x_per_m)?;
+        file.write(&self.y_per_m)?;
+        file.write(&self.colours_used)?;
+        file.write(&self.important_colours)?;
+
+        println!("Wrote BMP info header to file");
+
+        Ok(())
     }
 }
 

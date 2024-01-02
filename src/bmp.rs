@@ -79,6 +79,18 @@ impl Bmp {
             println!("Pixel {}: {}", i, pixel);
         }
     }
+
+    pub fn write_to_file(&self, file_name: &str) -> io::Result<()> {
+        let mut file = File::create(format!("{}.bmp", file_name))?;
+
+        self.header.write_to_file(&mut file)?;
+        self.info_header.write_to_file(&mut file)?;
+        self.colour_table.write_to_file(&mut file)?;
+        self.pixel_data.write_to_file(&mut file)?;
+
+        Ok(())
+    }
+
 }
 
 impl Clone for Bmp {

@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 
 #[repr(C)]
 pub struct BmpHeader {
@@ -25,6 +25,17 @@ impl BmpHeader {
         file.read_exact(&mut header.data_offset)?;
 
         Ok(header)
+    }
+
+    pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
+        file.write(&self.signature)?;
+        file.write(&self.file_size)?;
+        file.write(&self.reserved)?;
+        file.write(&self.data_offset)?;
+
+        println!("Wrote BMP header to file");
+
+        Ok(())
     }
 }
 

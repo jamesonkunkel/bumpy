@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{self, Read, Seek, SeekFrom};
+use std::io::{self, Read, Write, Seek, SeekFrom};
 
 /// Builds a `BmpPixelData8Bit` struct from a file and the corresponding `BmpInfoHeader`.
 ///     
@@ -30,6 +30,14 @@ impl BmpPixelData8Bit {
         file.read_to_end(&mut pixel_data.data)?;
 
         Ok(pixel_data)
+    }
+
+    pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
+        file.write(&self.data)?;
+
+        println!("Wrote BMP pixel data to file");
+
+        Ok(())
     }
 }
 

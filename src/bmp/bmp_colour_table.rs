@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{self, Read, Seek, SeekFrom};
+use std::io::{self, Read, Seek, SeekFrom, Write};
 use crate::bmp::bmp_info_header::BmpInfoHeader;
 
 /// Builds a `BmpColorTable` struct from a file and the corresponding `BmpInfoHeader`.
@@ -27,7 +27,7 @@ impl BmpColourTable {
         // Seek to the beginning of the color table at 0036h
         file.seek(SeekFrom::Start(54))?;
 
-        let mut buffer = vec![0; (color_table_size * 4) as usize];
+        let mut buffer = vec![0; (color_table_size) as usize];
 
         file.read(&mut buffer)?;
 
@@ -37,6 +37,16 @@ impl BmpColourTable {
             .collect::<Vec<_>>();
 
         Ok(color_table)
+    }
+
+    pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
+        for (r, g, b, a) in &self.data {
+            file.write(&[*b, *g, *r, *a])?;
+        }
+
+        println!("Wrote BMP color table to file");
+
+        Ok(())
     }
 }
 
