@@ -1,0 +1,40 @@
+use std::fs::File;
+use std::io::{self, Read};
+
+#[repr(C)]
+pub struct BmpHeader {
+    pub signature: [u8; 2],
+    pub file_size: [u8; 4],
+    pub reserved: [u8; 4],
+    pub data_offset: [u8; 4]
+}
+
+impl BmpHeader {
+    pub fn build_from_file(file: &mut File) -> io::Result<Self> {
+        let mut header = BmpHeader {
+            signature: [0; 2],
+            file_size: [0; 4],
+            reserved: [0; 4],
+            data_offset: [0; 4]
+        };
+
+        // Read the BMP file header
+        file.read_exact(&mut header.signature)?;
+        file.read_exact(&mut header.file_size)?;
+        file.read_exact(&mut header.reserved)?;
+        file.read_exact(&mut header.data_offset)?;
+
+        Ok(header)
+    }
+}
+
+impl Clone for BmpHeader {
+    fn clone(&self) -> Self {
+        BmpHeader {
+            signature: self.signature,
+            file_size: self.file_size,
+            reserved: self.reserved,
+            data_offset: self.data_offset
+        }
+    }
+}
