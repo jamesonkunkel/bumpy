@@ -3,7 +3,7 @@ use std::io;
 use bumpy::bmp::Bmp;
 
 fn main() -> io::Result<()> {
-    let mut file = File::open("sample4.bmp")?;
+    let mut file = File::open("sample.bmp")?;
     let bmp = Bmp::build_from_file(&mut file)?;
 
     let mut bmp2 = bmp.clone();

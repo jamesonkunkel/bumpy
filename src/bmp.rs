@@ -13,15 +13,7 @@ use bmp_info_header::BmpInfoHeader;
 use bmp_colour_table::BmpColourTable;
 use bmp_pixel_data_24_bit::BmpPixelData24Bit;
 
-/// Builds a `Bmp` struct from a file representing all of the contents of a .bmp file
-///
-/// # Arguments
-///
-/// * `file` - A mutable reference to a `File` object.
-///
-/// # Returns
-///
-/// Returns a `Result` containing the `BmpHeader` if successful, or an `io::Error` if an error occurred.
+/// A clonable struct representing a .bmp file. Top level abstraction of bitmap file. Currently only supports 24-bit .bmp files.
 pub struct Bmp {
     pub header: BmpHeader,
     pub info_header: BmpInfoHeader,
@@ -30,6 +22,31 @@ pub struct Bmp {
 }
 
 impl Bmp {
+
+    /// Builds a Bmp struct instance from a `File` object.
+    ///
+    /// # Arguments
+    ///
+    /// * `file` - A mutable reference to a `File` object.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the `BmpHeader` if successful, or an `io::Error` if an error occurred.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    ///     
+    /// fn main() -> io::Result<()> {
+    ///    let mut file = File::open("sample.bmp")?;
+    ///    let bmp = Bmp::build_from_file(&mut file)?;
+    /// 
+    ///   Ok(())
+    /// }
+    /// ```   
     pub fn build_from_file(file: &mut File) -> io::Result<Self> {
         let header = BmpHeader::build_from_file(file)?;
         let info_header = BmpInfoHeader::build_from_file(file)?;
@@ -48,6 +65,29 @@ impl Bmp {
         })
     }
 
+    /// Prints the contents of the `Bmp` struct to the console.
+    ///     
+    /// # Arguments
+    /// 
+    /// * `with_color_table` - A boolean value indicating whether to print the color table.
+    /// * `with_pixel_data` - A boolean value indicating whether to print the pixel data.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///   let mut file = File::open("sample.bmp")?;
+    ///   let bmp = Bmp::build_from_file(&mut file)?;
+    ///     
+    ///   bmp.print_all(false, false);
+    ///     
+    ///   Ok(())
+    /// }
+    /// ```
     pub fn print_all(&self, with_color_table: bool, with_pixel_data: bool) {
         println!("BMP Header:");
         println!("Signature: {}", String::from_utf8_lossy(&self.header.signature));
@@ -84,6 +124,29 @@ impl Bmp {
         
     }
 
+
+    /// Writes the contents of the `Bmp` struct to a file.
+    ///     
+    /// # Arguments
+    /// 
+    /// * `file_name` - A string slice containing the name of the file to write to.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let bmp = Bmp::build_from_file(&mut file)?;
+    ///     
+    ///     bmp.write_to_file("test")?;
+    /// 
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn write_to_file(&self, file_name: &str) -> io::Result<()> {
         let mut file = File::create(format!("{}.bmp", file_name))?;
 
@@ -95,6 +158,7 @@ impl Bmp {
         Ok(())
     }
 
+    // internal function to convert pixel data to tuple data for 24-bit bmps
     fn to_tuple_data(&self) -> Vec<(u8, u8, u8)> {
         let mut tuple_data = Vec::new();
 
@@ -109,6 +173,26 @@ impl Bmp {
         tuple_data
     }
 
+    /// Converts the pixel data to greyscale.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let mut bmp = Bmp::build_from_file(&mut file)?;
+    /// 
+    ///     bmp.to_greyscale();
+    /// 
+    ///     bmp.write_to_file("test")?;
+    /// 
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn to_greyscale(&mut self) {
         let tuple_data = self.to_tuple_data();
 
@@ -136,7 +220,7 @@ impl Clone for Bmp {
 
 
 //converts BGR tuple to grayscale
-pub fn rgb_to_greyscale(bgr: (u8, u8, u8)) -> (u8, u8, u8) {
+fn rgb_to_greyscale(bgr: (u8, u8, u8)) -> (u8, u8, u8) {
     let (b, g, r) = bgr;
     let grey_value = (0.299 * f64::from(r) + 0.587 * f64::from(g) + 0.114 * f64::from(b)).round() as u8;
 
