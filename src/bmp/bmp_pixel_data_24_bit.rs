@@ -1,7 +1,7 @@
 use std::fs::File;
-use std::io::{self, Read, Write, Seek, SeekFrom};
+use std::io::{self, Write, Read, Seek, SeekFrom};
 
-/// Builds a `BmpPixelData8Bit` struct from a file and the corresponding `BmpInfoHeader`.
+/// Builds a `BmpPixelData24Bit` struct from a file and the corresponding `BmpInfoHeader`.
 ///     
 /// # Arguments
 /// 
@@ -10,21 +10,21 @@ use std::io::{self, Read, Write, Seek, SeekFrom};
 /// 
 /// # Returns
 /// 
-/// Returns a `Result` containing the `BmpPixelData8Bit` if successful, or an `io::Error` if an error occurred.
-/// Only supporting 8-bit pixel data for now
+/// Returns a `Result` containing the `BmpPixelData24Bit` if successful, or an `io::Error` if an error occurred.
+/// Only supporting 24-bit pixel data for now
 
-pub struct BmpPixelData8Bit {
-    pub data: Vec<u8>
+pub struct BmpPixelData24Bit {
+    pub data: Vec<u8>,
 }
 
-impl BmpPixelData8Bit {
+impl BmpPixelData24Bit {
     pub fn build_from_file(file: &mut File, data_offset: &[u8; 4]) -> io::Result<Self> {
         // Move the file cursor to the start of the pixel data
         let data_offset = u32::from_le_bytes(*data_offset) as u64;
         file.seek(SeekFrom::Start(data_offset))?;
 
-        let mut pixel_data = BmpPixelData8Bit {
-            data: Vec::new()
+        let mut pixel_data = BmpPixelData24Bit {
+            data: Vec::new(),
         };
 
         file.read_to_end(&mut pixel_data.data)?;
@@ -41,10 +41,10 @@ impl BmpPixelData8Bit {
     }
 }
 
-impl Clone for BmpPixelData8Bit {
+impl Clone for BmpPixelData24Bit {
     fn clone(&self) -> Self {
-        BmpPixelData8Bit {
-            data: self.data.clone()
+        BmpPixelData24Bit {
+            data: self.data.clone(),
         }
     }
 }

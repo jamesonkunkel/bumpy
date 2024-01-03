@@ -1,7 +1,7 @@
 mod bmp_header;
 mod bmp_info_header;
 mod bmp_colour_table;
-mod bmp_pixel_data_8_bit;
+mod bmp_pixel_data_24_bit;
 
 //standard library imports
 use std::fs::File;
@@ -11,7 +11,7 @@ use std::io;
 use bmp_header::BmpHeader;
 use bmp_info_header::BmpInfoHeader;
 use bmp_colour_table::BmpColourTable;
-use bmp_pixel_data_8_bit::BmpPixelData8Bit;
+use bmp_pixel_data_24_bit::BmpPixelData24Bit;
 
 /// Builds a `Bmp` struct from a file representing all of the contents of a .bmp file
 ///
@@ -26,7 +26,7 @@ pub struct Bmp {
     pub header: BmpHeader,
     pub info_header: BmpInfoHeader,
     pub colour_table: BmpColourTable,
-    pub pixel_data: BmpPixelData8Bit
+    pub pixel_data: BmpPixelData24Bit
 }
 
 impl Bmp {
@@ -34,7 +34,11 @@ impl Bmp {
         let header = BmpHeader::build_from_file(file)?;
         let info_header = BmpInfoHeader::build_from_file(file)?;
         let colour_table = BmpColourTable::build_from_file(file, &info_header)?;
-        let pixel_data = BmpPixelData8Bit::build_from_file(file, &header.data_offset)?;
+        let pixel_data = BmpPixelData24Bit::build_from_file(file, &header.data_offset)?;
+
+        if u16::from_le_bytes(info_header.bits_per_px) != 24 {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Only 24-bit .bmp files are supported"));
+        }
 
         Ok(Bmp {
             header,
@@ -44,7 +48,7 @@ impl Bmp {
         })
     }
 
-    pub fn print_all(&self, with_color_table: bool) {
+    pub fn print_all(&self, with_color_table: bool, with_pixel_data: bool) {
         println!("BMP Header:");
         println!("Signature: {}", String::from_utf8_lossy(&self.header.signature));
         println!("File size: {}", u32::from_le_bytes(self.header.file_size));
@@ -54,8 +58,8 @@ impl Bmp {
 
         println!("BMP Info Header:");
         println!("Size: {}", u32::from_le_bytes(self.info_header.size));
-        println!("Width: {}", u32::from_le_bytes(self.info_header.width));
-        println!("Height: {}", u32::from_le_bytes(self.info_header.height));
+        println!("Width: {:?}", self.info_header.width);
+        println!("Height: {:?}", self.info_header.height);
         println!("Planes: {}", u16::from_le_bytes(self.info_header.planes));
         println!("Bits per pixel: {}", u16::from_le_bytes(self.info_header.bits_per_px));
         println!("Compression: {}", u32::from_le_bytes(self.info_header.compression));
@@ -74,10 +78,10 @@ impl Bmp {
             println!("");
         }
 
-        println!("BMP Pixel Data:");
-        for (i, pixel) in self.pixel_data.data.iter().enumerate() {
-            println!("Pixel {}: {}", i, pixel);
+        if with_pixel_data {
+            println!("BMP Pixel Data:");
         }
+        
     }
 
     pub fn write_to_file(&self, file_name: &str) -> io::Result<()> {
@@ -91,6 +95,32 @@ impl Bmp {
         Ok(())
     }
 
+    fn to_tuple_data(&self) -> Vec<(u8, u8, u8)> {
+        let mut tuple_data = Vec::new();
+
+        for i in 0..self.pixel_data.data.len() / 3 {
+            let b = self.pixel_data.data[i * 3];
+            let g = self.pixel_data.data[i * 3 + 1];
+            let r = self.pixel_data.data[i * 3 + 2];
+
+            tuple_data.push((b, g, r));
+        }
+
+        tuple_data
+    }
+
+    pub fn to_greyscale(&mut self) {
+        let tuple_data = self.to_tuple_data();
+
+        for (i, pixel) in tuple_data.iter().enumerate() {
+            let (b, g, r) = rgb_to_greyscale(*pixel);
+
+            self.pixel_data.data[i * 3] = b;
+            self.pixel_data.data[i * 3 + 1] = g;
+            self.pixel_data.data[i * 3 + 2] = r;
+        }
+    }
+
 }
 
 impl Clone for Bmp {
@@ -102,5 +132,14 @@ impl Clone for Bmp {
             pixel_data: self.pixel_data.clone()
         }
     }
+}
+
+
+//converts BGR tuple to grayscale
+pub fn rgb_to_greyscale(bgr: (u8, u8, u8)) -> (u8, u8, u8) {
+    let (b, g, r) = bgr;
+    let grey_value = (0.299 * f64::from(r) + 0.587 * f64::from(g) + 0.114 * f64::from(b)).round() as u8;
+
+    (grey_value, grey_value, grey_value)
 }
 
