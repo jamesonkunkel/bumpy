@@ -184,7 +184,7 @@ impl Bmp {
         }
     }
 
-    /// Converts the pixel data to greyscale.
+    /// Converts the image to greyscale.
     /// 
     /// # Examples
     /// 
@@ -216,6 +216,26 @@ impl Bmp {
         }
     }
 
+    /// Rotates image 180 degrees
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let mut bmp = Bmp::build_from_file(&mut file)?;
+    /// 
+    ///     bmp.rotate_180();
+    /// 
+    ///     bmp.write_to_file("test")?;
+    /// 
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn rotate_180(&mut self){
         let mut tuple_data = self.to_tuple_data();
         tuple_data.reverse();
@@ -223,6 +243,28 @@ impl Bmp {
         self.from_tuple_data(tuple_data);
     }
 
+
+        
+    /// Rotates image 90 degrees clockwise.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let mut bmp = Bmp::build_from_file(&mut file)?;
+    /// 
+    ///     bmp.rotate_90();
+    /// 
+    ///     bmp.write_to_file("test")?;
+    /// 
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn rotate_90(&mut self){
         // swap width and height
         let width = self.info_header.width;
@@ -247,11 +289,51 @@ impl Bmp {
         self.from_tuple_data(new_tuple_data);
     }
     
+    /// Rotates image 270 degrees clockwise.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let mut bmp = Bmp::build_from_file(&mut file)?;
+    /// 
+    ///     bmp.rotate_270();
+    /// 
+    ///     bmp.write_to_file("test")?;
+    /// 
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn rotate_270(&mut self){
         self.rotate_180();
         self.rotate_90();
     }
 
+    /// Mirrors image along horizontal axis
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let mut bmp = Bmp::build_from_file(&mut file)?;
+    /// 
+    ///     bmp.flip_hor();
+    /// 
+    ///     bmp.write_to_file("test")?;
+    /// 
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn flip_hor(&mut self){
         let width = u32::from_le_bytes(self.info_header.width);
         let height = u32::from_le_bytes(self.info_header.height);
