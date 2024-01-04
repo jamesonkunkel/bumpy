@@ -158,7 +158,7 @@ impl Bmp {
         Ok(())
     }
 
-    // internal function to convert pixel data to tuple data for 24-bit bmps
+    // private function to convert pixel data to tuple data for 24-bit bmps
     fn to_tuple_data(&self) -> Vec<(u8, u8, u8)> {
         let mut tuple_data = Vec::new();
 
@@ -203,6 +203,50 @@ impl Bmp {
             self.pixel_data.data[i * 3 + 1] = g;
             self.pixel_data.data[i * 3 + 2] = r;
         }
+    }
+
+    pub fn rotate_180(&mut self){
+        let mut tuple_data = self.to_tuple_data();
+        tuple_data.reverse();
+
+        for (i, pixel) in tuple_data.iter().enumerate() {
+            let (b, g, r) = *pixel;
+
+            self.pixel_data.data[i * 3] = b;
+            self.pixel_data.data[i * 3 + 1] = g;
+            self.pixel_data.data[i * 3 + 2] = r;
+        }
+    }
+
+    pub fn rotate_90(&mut self){
+        let tuple_data = self.to_tuple_data();
+        let mut new_tuple_data: Vec<(u8, u8, u8)> = Vec::new();
+
+        let width = u32::from_le_bytes(self.info_header.width);
+        let height = u32::from_le_bytes(self.info_header.height);
+
+        for i in (1..=width).rev() {
+            for j in 0..=(height - 1) {
+                let index = ((i - 1) + height * j) as usize;
+                new_tuple_data.push(tuple_data[index]);
+            }
+        }
+
+        //write new tuple data to pixel data
+        for (i, pixel) in new_tuple_data.iter().enumerate() {
+            let (b, g, r) = *pixel;
+
+            self.pixel_data.data[i * 3] = b;
+            self.pixel_data.data[i * 3 + 1] = g;
+            self.pixel_data.data[i * 3 + 2] = r;
+        }
+
+        println!("width: {}", width);
+    }
+    
+    pub fn rotate_270(&mut self){
+        self.rotate_180();
+        self.rotate_90();
     }
 
 }
