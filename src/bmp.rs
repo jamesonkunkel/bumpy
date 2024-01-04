@@ -98,8 +98,8 @@ impl Bmp {
 
         println!("BMP Info Header:");
         println!("Size: {}", u32::from_le_bytes(self.info_header.size));
-        println!("Width: {:?}", self.info_header.width);
-        println!("Height: {:?}", self.info_header.height);
+        println!("Width: {:?}", u32::from_le_bytes(self.info_header.width));
+        println!("Height: {:?}", u32::from_le_bytes(self.info_header.height));
         println!("Planes: {}", u16::from_le_bytes(self.info_header.planes));
         println!("Bits per pixel: {}", u16::from_le_bytes(self.info_header.bits_per_px));
         println!("Compression: {}", u32::from_le_bytes(self.info_header.compression));
@@ -173,6 +173,17 @@ impl Bmp {
         tuple_data
     }
 
+    // private function to convert tuple data to pixel data for 24-bit bmps
+    fn from_tuple_data(&mut self, tuple_data: Vec<(u8, u8, u8)>) {
+        for (i, pixel) in tuple_data.iter().enumerate() {
+            let (b, g, r) = *pixel;
+
+            self.pixel_data.data[i * 3] = b;
+            self.pixel_data.data[i * 3 + 1] = g;
+            self.pixel_data.data[i * 3 + 2] = r;
+        }
+    }
+
     /// Converts the pixel data to greyscale.
     /// 
     /// # Examples
@@ -209,16 +220,17 @@ impl Bmp {
         let mut tuple_data = self.to_tuple_data();
         tuple_data.reverse();
 
-        for (i, pixel) in tuple_data.iter().enumerate() {
-            let (b, g, r) = *pixel;
-
-            self.pixel_data.data[i * 3] = b;
-            self.pixel_data.data[i * 3 + 1] = g;
-            self.pixel_data.data[i * 3 + 2] = r;
-        }
+        self.from_tuple_data(tuple_data);
     }
 
     pub fn rotate_90(&mut self){
+        // swap width and height
+        let width = u32::from_le_bytes(self.info_header.width);
+        let height = u32::from_le_bytes(self.info_header.height);
+
+        self.info_header.width = height.to_le_bytes();
+        self.info_header.height = width.to_le_bytes();
+
         let tuple_data = self.to_tuple_data();
         let mut new_tuple_data: Vec<(u8, u8, u8)> = Vec::new();
 
@@ -232,16 +244,7 @@ impl Bmp {
             }
         }
 
-        //write new tuple data to pixel data
-        for (i, pixel) in new_tuple_data.iter().enumerate() {
-            let (b, g, r) = *pixel;
-
-            self.pixel_data.data[i * 3] = b;
-            self.pixel_data.data[i * 3 + 1] = g;
-            self.pixel_data.data[i * 3 + 2] = r;
-        }
-
-        println!("width: {}", width);
+        self.from_tuple_data(new_tuple_data);
     }
     
     pub fn rotate_270(&mut self){
