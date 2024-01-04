@@ -3,7 +3,7 @@ use std::io;
 use bumpy::bmp::Bmp;
 
 fn main() -> io::Result<()> {
-    let mut file = File::open("sample7.bmp")?;
+    let mut file = File::open("sample.bmp")?;
     let bmp = Bmp::build_from_file(&mut file)?;
 
     let mut bmp2 = bmp.clone();
@@ -14,7 +14,8 @@ fn main() -> io::Result<()> {
 
     
 
-    bmp2.to_greyscale();
+    // bmp2.to_greyscale();
+    // bmp2.flip_hor();
     bmp2.rotate_90();
 
     bmp2.print_all(false, false);

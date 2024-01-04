@@ -225,11 +225,11 @@ impl Bmp {
 
     pub fn rotate_90(&mut self){
         // swap width and height
-        let width = u32::from_le_bytes(self.info_header.width);
-        let height = u32::from_le_bytes(self.info_header.height);
+        let width = self.info_header.width;
+        let height = self.info_header.height;
 
-        self.info_header.width = height.to_le_bytes();
-        self.info_header.height = width.to_le_bytes();
+        self.info_header.width = height;
+        self.info_header.height = width;
 
         let tuple_data = self.to_tuple_data();
         let mut new_tuple_data: Vec<(u8, u8, u8)> = Vec::new();
@@ -250,6 +250,23 @@ impl Bmp {
     pub fn rotate_270(&mut self){
         self.rotate_180();
         self.rotate_90();
+    }
+
+    pub fn flip_hor(&mut self){
+        let width = u32::from_le_bytes(self.info_header.width);
+        let height = u32::from_le_bytes(self.info_header.height);
+
+        let tuple_data = self.to_tuple_data();
+        let mut new_tuple_data: Vec<(u8, u8, u8)> = Vec::new();
+
+        for i in 0..=height - 1 {
+            for j in (1..=width).rev() {
+                let index = ((j - 1) + width * i) as usize;
+                new_tuple_data.push(tuple_data[index]);
+            }
+        }
+
+        self.from_tuple_data(new_tuple_data);
     }
 
 }
