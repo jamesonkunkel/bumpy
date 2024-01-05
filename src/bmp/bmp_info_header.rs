@@ -27,6 +27,27 @@ pub struct BmpInfoHeader {
 }
 
 impl BmpInfoHeader {
+
+    pub fn new(width: u32, height: u32) -> Self {
+
+        let width = u32::to_le_bytes(width);
+        let height = u32::to_le_bytes(height);
+
+        BmpInfoHeader {
+            size: [40, 0, 0, 0],
+            width,
+            height,
+            planes: [1, 0],
+            bits_per_px: [24, 0],
+            compression: [0, 0, 0, 0],
+            image_size: [0, 0, 0, 0],
+            x_per_m: [0, 0, 0, 0],
+            y_per_m: [0, 0, 0, 0],
+            colours_used: [0, 0, 0, 0],
+            important_colours: [0, 0, 0, 0]
+        }
+    }
+
     pub fn build_from_file(file: &mut File) -> io::Result<Self> {
         let mut info_header = BmpInfoHeader {
             size: [0; 4],

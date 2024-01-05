@@ -10,6 +10,26 @@ pub struct BmpHeader {
 }
 
 impl BmpHeader {
+
+    pub fn new(width: u32, height: u32) -> Self {
+        let u32 = width * height * 3 + 54;
+        let as_le = u32.to_le_bytes();
+        let back = u32::from_le_bytes(as_le);
+
+        println!("{} {:?} {}", u32, as_le, back);
+
+        let file_size = u32::to_le_bytes((width * height * 3) + 54);
+
+        println!("File size: {:?}, {}, {}", file_size, width, height);
+
+        BmpHeader {
+            signature: [66, 77],
+            file_size,
+            reserved: [0; 4],
+            data_offset: u32::to_le_bytes(54)
+        }
+    }
+
     pub fn build_from_file(file: &mut File) -> io::Result<Self> {
         let mut header = BmpHeader {
             signature: [0; 2],

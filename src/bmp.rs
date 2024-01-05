@@ -23,6 +23,34 @@ pub struct Bmp {
 
 impl Bmp {
 
+    /// Builds a `Bmp` struct instance.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `width` - The width of the image in pixels.
+    /// * `height` - The height of the image in pixels.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// let bmp = Bmp::new(100, 100);
+    /// ```
+    pub fn new(width: u32, height: u32) -> Self {
+        let header = BmpHeader::new(width, height);
+        let info_header = BmpInfoHeader::new(width, height);
+        let colour_table = BmpColourTable::new();
+        let pixel_data = BmpPixelData24Bit::new(width, height);
+
+        Bmp {
+            header,
+            info_header,
+            colour_table,
+            pixel_data
+        }
+    }
+
     /// Builds a Bmp struct instance from a `File` object.
     ///
     /// # Arguments
@@ -64,6 +92,12 @@ impl Bmp {
             pixel_data
         })
     }
+
+    // pub fn new(width: u32, height: u32, colour: (u8, u8, u8)) -> Self {
+    //     let new_bmp: Bmp = Bmp {
+
+    //     }
+    // }
 
     /// Prints the contents of the `Bmp` struct to the console.
     ///     
@@ -108,6 +142,66 @@ impl Bmp {
         println!("Y pixels per meter: {}", u32::from_le_bytes(self.info_header.y_per_m));
         println!("Colours used: {}", u32::from_le_bytes(self.info_header.colours_used));
         println!("Important colours: {}", u32::from_le_bytes(self.info_header.important_colours));
+        println!("");
+
+        if with_color_table {
+            println!("BMP Color Table:");
+            for (i, color) in self.colour_table.data.iter().enumerate() {
+                println!("Color {}: {:?}", i, color);
+            }
+            println!("");
+        }
+
+        if with_pixel_data {
+            println!("BMP Pixel Data:");
+        }
+        
+    }
+
+    /// Prints the contents of the `Bmp` struct to the console without converting the bytes to their corresponding values.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `with_color_table` - A boolean value indicating whether to print the color table.
+    /// * `with_pixel_data` - A boolean value indicating whether to print the pixel data.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let bmp = Bmp::build_from_file(&mut file)?;
+    ///     
+    ///     bmp.print_all_raw(false, false);
+    ///     
+    ///     Ok(())
+    /// }
+    /// ```
+
+    pub fn print_all_raw (&self, with_color_table: bool, with_pixel_data: bool) {
+        println!("BMP Header:");
+        println!("Signature: {:?}", self.header.signature);
+        println!("File size: {:?}", self.header.file_size);
+        println!("Reserved: {:?}", self.header.reserved);
+        println!("Data offset: {:?}", self.header.data_offset);
+        println!("");
+
+        println!("BMP Info Header:");
+        println!("Size: {:?}", self.info_header.size);
+        println!("Width: {:?}", self.info_header.width);
+        println!("Height: {:?}", self.info_header.height);
+        println!("Planes: {:?}", self.info_header.planes);
+        println!("Bits per pixel: {:?}", self.info_header.bits_per_px);
+        println!("Compression: {:?}", self.info_header.compression);
+        println!("Image size: {:?}", self.info_header.image_size);
+        println!("X pixels per meter: {:?}", self.info_header.x_per_m);
+        println!("Y pixels per meter: {:?}", self.info_header.y_per_m);
+        println!("Colours used: {:?}", self.info_header.colours_used);
+        println!("Important colours: {:?}", self.info_header.important_colours);
         println!("");
 
         if with_color_table {
@@ -242,8 +336,6 @@ impl Bmp {
 
         self.from_tuple_data(tuple_data);
     }
-
-
         
     /// Rotates image 90 degrees clockwise.
     /// 

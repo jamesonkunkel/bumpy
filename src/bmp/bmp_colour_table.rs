@@ -17,6 +17,13 @@ pub struct BmpColourTable {
 }
 
 impl BmpColourTable {
+
+    pub fn new() -> Self {
+        BmpColourTable {
+            data: Vec::new()
+        }
+    }
+
     pub fn build_from_file(file: &mut File, info_header: &BmpInfoHeader) -> io::Result<Self> {
         let color_table_size = u32::from_le_bytes(info_header.colours_used) * 4;
 

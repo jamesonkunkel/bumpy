@@ -18,6 +18,16 @@ pub struct BmpPixelData24Bit {
 }
 
 impl BmpPixelData24Bit {
+
+    pub fn new(width: u32, height: u32) -> Self {
+
+        let dummy_data: Vec<u8> = vec![0; (width * height * 3) as usize];
+
+        BmpPixelData24Bit {
+            data: dummy_data
+        }
+    }
+
     pub fn build_from_file(file: &mut File, data_offset: &[u8; 4]) -> io::Result<Self> {
         // Move the file cursor to the start of the pixel data
         let data_offset = u32::from_le_bytes(*data_offset) as u64;

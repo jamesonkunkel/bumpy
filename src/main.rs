@@ -12,15 +12,12 @@ fn main() -> io::Result<()> {
     bmp2.pixel_data.data[1] = 255;
     bmp2.pixel_data.data[2] = 0;
 
-    
-
-    // bmp2.to_greyscale();
-    // bmp2.flip_hor();
-    bmp2.rotate_90();
-
     bmp2.print_all(false, false);
 
-    bmp2.write_to_file("test")?;
+    let bmp3 = Bmp::new(100, 100);
+    bmp3.write_to_file("test2")?;
+
+    bmp3.print_all(true, true);
 
     Ok(())
 }
