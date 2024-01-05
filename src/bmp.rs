@@ -358,13 +358,6 @@ impl Bmp {
     /// }
     /// ```
     pub fn rotate_90(&mut self){
-        // swap width and height
-        let width = self.info_header.width;
-        let height = self.info_header.height;
-
-        self.info_header.width = height;
-        self.info_header.height = width;
-
         let tuple_data = self.to_tuple_data();
         let mut new_tuple_data: Vec<(u8, u8, u8)> = Vec::new();
 
@@ -373,10 +366,17 @@ impl Bmp {
 
         for i in (1..=width).rev() {
             for j in 0..=(height - 1) {
-                let index = ((i - 1) + height * j) as usize;
+                let index = ((i - 1) + width * j) as usize;
                 new_tuple_data.push(tuple_data[index]);
             }
         }
+
+        // swap width and height
+        let width = self.info_header.width;
+        let height = self.info_header.height;
+
+        self.info_header.width = height;
+        self.info_header.height = width;
 
         self.from_tuple_data(new_tuple_data);
     }
