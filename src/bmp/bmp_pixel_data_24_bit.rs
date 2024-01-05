@@ -20,12 +20,59 @@ pub struct BmpPixelData24Bit {
 impl BmpPixelData24Bit {
 
     pub fn new(width: u32, height: u32) -> Self {
+        // let dummy_data: Vec<u8> = vec![100; (width * height * 3) as usize];
 
-        let dummy_data: Vec<u8> = vec![0; (width * height * 3) as usize];
+        // //find remainder after dividing by 4 and add padding if necessary
+        // let padding_length = width % 4;
+
+        // if padding_length != 0 {
+        //     let padding = vec![0; padding_length as usize];
+        //     let mut data = dummy_data.clone();
+
+        //     for i in (0..height).rev() {
+        //         let start = (i * width * 3) as usize;
+        //         let end = ((i + 1) * width * 3) as usize;
+
+        //         data.splice(end..end, padding.clone());
+        //         data.splice(start..start, padding.clone());
+        //     }
+
+        //     BmpPixelData24Bit {
+        //         data
+        //     }
+        // } else {
+        //     BmpPixelData24Bit {
+        //         data: dummy_data
+        //     }
+        // }
+
+        // BmpPixelData24Bit {
+        //     data: dummy_data
+        // }
+
+        //find remainder after dividing by 4 and add padding if necessary
+        let padding_length = width % 4;
+
+        let mut data = Vec::new();
+
+        for _i in 0..height {
+            for _j in 0..width {
+                //push 100 width times
+                data.push(100);
+                data.push(0);
+                data.push(0);
+            }
+
+            //pushing 0 padding_length times
+            for _j in 0..padding_length {
+                data.push(0);
+            }
+        }
 
         BmpPixelData24Bit {
-            data: dummy_data
+            data
         }
+
     }
 
     pub fn build_from_file(file: &mut File, data_offset: &[u8; 4]) -> io::Result<Self> {

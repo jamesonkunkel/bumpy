@@ -3,24 +3,23 @@ use std::io;
 use bumpy::bmp::Bmp;
 
 fn main() -> io::Result<()> {
-    let mut file = File::open("sample5.bmp")?;
-    let bmp = Bmp::build_from_file(&mut file)?;
+    let mut file = File::open("sample8.bmp")?;
+    let mut bmp = Bmp::build_from_file(&mut file)?;
 
-    let mut bmp2 = bmp.clone();
+    bmp.rotate_90();
+    println!("{:?}", bmp.pixel_data.data);
 
-    bmp2.info_header.x_per_m = u32::to_le_bytes(0);
-    bmp2.info_header.y_per_m = u32::to_le_bytes(0);
-    bmp2.rotate_180();
+    // bmp2.print_all(false, false);
 
-    bmp2.print_all_raw(false, false);
+    // bmp2.write_to_file("test")?;
 
-    bmp2.write_to_file("test")?;
+    // let mut bmp3 = Bmp::new(3, 2);
+    // // bmp3.rotate_90();
+    // println!("{:?}", bmp3.pixel_data.data);
 
-    let bmp3 = Bmp::new(40, 100);
+    bmp.write_to_file("test2")?;
 
-    bmp3.write_to_file("test2")?;
-
-    bmp3.print_all(true, true);
+    // bmp3.print_all(true, true);
 
     Ok(())
 }
