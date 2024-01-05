@@ -6,7 +6,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bumpy = "0.1"
+bumpy = "0.0.2"
 ```
 
 ## Example
