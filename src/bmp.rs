@@ -2,6 +2,7 @@ mod bmp_header;
 mod bmp_info_header;
 mod bmp_colour_table;
 mod bmp_pixel_data_24_bit;
+mod utils;
 
 //standard library imports
 use std::fs::File;
@@ -12,6 +13,9 @@ use bmp_header::BmpHeader;
 use bmp_info_header::BmpInfoHeader;
 use bmp_colour_table::BmpColourTable;
 use bmp_pixel_data_24_bit::BmpPixelData24Bit;
+
+//import utils
+use utils::{round_up_to_multiple_of_four, rgb_to_greyscale};
 
 /// A clonable struct representing a .bmp file. Top level abstraction of bitmap file. Currently only supports 24-bit .bmp files.
 pub struct Bmp {
@@ -310,34 +314,9 @@ impl Bmp {
             self.pixel_data.data[i * 3 + 2] = r;
         }
     }
-
-    /// Rotates image 180 degrees
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// use std::fs::File;
-    /// use std::io;
-    /// use bumpy::bmp::Bmp;
-    /// 
-    /// fn main() -> io::Result<()> {
-    ///     let mut file = File::open("sample.bmp")?;
-    ///     let mut bmp = Bmp::build_from_file(&mut file)?;
-    /// 
-    ///     bmp.rotate_180();
-    /// 
-    ///     bmp.write_to_file("test")?;
-    /// 
-    ///     Ok(())
-    /// }
-    /// ```
-    pub fn rotate_180(&mut self){
-        let mut tuple_data = self.to_tuple_data();
-        tuple_data.reverse();
-
-        self.from_tuple_data(tuple_data);
-    }
         
+
+
     /// Rotates image 90 degrees clockwise.
     /// 
     /// # Examples
@@ -359,40 +338,13 @@ impl Bmp {
     /// }
     /// ```
     pub fn rotate_90(&mut self){
-        let tuple_data = self.to_tuple_data();
-        let mut new_tuple_data: Vec<(u8, u8, u8)> = Vec::new();
-
-        let width = u32::from_le_bytes(self.info_header.width);
-        let height = u32::from_le_bytes(self.info_header.height);
-
-        let padding_length = round_up_to_multiple_of_four(height * 3) - (height * 3);
-
-        for i in (1..=width).rev() {
-            for j in 0..=(height - 1) {
-                let index = ((i - 1) + width * j) as usize;
-                new_tuple_data.push(tuple_data[index]);
-            }
-        }
-
-        // swap width and height
-        let width = self.info_header.width;
-        let height = self.info_header.height;
-
-        self.info_header.width = height;
-        self.info_header.height = width;
-
-        self.from_tuple_data(new_tuple_data);
-    }
-
-
-    // rotate 90 but without converting to tuple data and while accounting for padding
-    pub fn rotate_90_raw(&mut self){
         let width = u32::from_le_bytes(self.info_header.width);
         let height = u32::from_le_bytes(self.info_header.height);
 
         let mut new_pixel_data = Vec::new();
 
         let curr_padding = round_up_to_multiple_of_four(width * 3) - (width * 3);
+        let new_padding = round_up_to_multiple_of_four(height * 3) - (height * 3);
 
         for i in (1..=width).rev() {
             for j in 0..=(height - 1) {
@@ -402,7 +354,7 @@ impl Bmp {
                 new_pixel_data.push(self.pixel_data.data[index * 3 + 2 + (curr_padding * j) as usize]);
             }
 
-            for _j in 0..round_up_to_multiple_of_four(height * 3) - (height * 3) {
+            for _j in 0..new_padding {
                 new_pixel_data.push(0);
             }
         }
@@ -417,6 +369,31 @@ impl Bmp {
         self.pixel_data.data = new_pixel_data;
     }
     
+    /// Rotates image 180 degrees
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::fs::File;
+    /// use std::io;
+    /// use bumpy::bmp::Bmp;
+    /// 
+    /// fn main() -> io::Result<()> {
+    ///     let mut file = File::open("sample.bmp")?;
+    ///     let mut bmp = Bmp::build_from_file(&mut file)?;
+    /// 
+    ///     bmp.rotate_180();
+    /// 
+    ///     bmp.write_to_file("test")?;
+    /// 
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn rotate_180(&mut self){
+        self.rotate_90();
+        self.rotate_90();
+    }
+
     /// Rotates image 270 degrees clockwise.
     /// 
     /// # Examples
@@ -490,19 +467,5 @@ impl Clone for Bmp {
             pixel_data: self.pixel_data.clone()
         }
     }
-}
-
-
-//converts BGR tuple to grayscale
-fn rgb_to_greyscale(bgr: (u8, u8, u8)) -> (u8, u8, u8) {
-    let (b, g, r) = bgr;
-    let grey_value = (0.299 * f64::from(r) + 0.587 * f64::from(g) + 0.114 * f64::from(b)).round() as u8;
-
-    (grey_value, grey_value, grey_value)
-}
-
-
-fn round_up_to_multiple_of_four(value: u32) -> u32 {
-    ((value + 3) / 4) * 4
 }
 

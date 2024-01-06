@@ -1,5 +1,8 @@
+use crate::bmp::utils::round_up_to_multiple_of_four;
+
 use std::fs::File;
 use std::io::{self, Write, Read, Seek, SeekFrom};
+
 
 /// Builds a `BmpPixelData24Bit` struct from a file and the corresponding `BmpInfoHeader`.
 ///     
@@ -75,8 +78,4 @@ impl Clone for BmpPixelData24Bit {
             data: self.data.clone(),
         }
     }
-}
-
-fn round_up_to_multiple_of_four(value: u32) -> u32 {
-    ((value + 3) / 4) * 4
 }
