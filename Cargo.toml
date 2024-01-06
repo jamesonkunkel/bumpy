@@ -1,10 +1,11 @@
 [package]
 name = "bumpy"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 license = "MIT"
 description = "A library for reading and manipulating bitmap (.bmp) files."
 homepage = "https://github.com/jamesonkunkel/bumpy"
+keywords = ["bmp", "bitmap", "image"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
