@@ -162,7 +162,7 @@ impl Bmp {
         
     }
 
-    /// Prints the contents of the `Bmp` struct to the console without converting the bytes to their corresponding values.
+    /// Prints the contents of the `Bmp` struct to the console without converting the bytes to their corresponding integer values.
     /// 
     /// # Arguments
     /// 
@@ -256,33 +256,6 @@ impl Bmp {
         Ok(())
     }
 
-    // private function to convert pixel data to tuple data for 24-bit bmps
-    // should account for padding and just strip it out before we regenerate pixel data
-    fn to_tuple_data(&self) -> Vec<(u8, u8, u8)> {
-        let mut tuple_data = Vec::new();
-
-        for i in 0..self.pixel_data.data.len() / 3 {
-            let b = self.pixel_data.data[i * 3];
-            let g = self.pixel_data.data[i * 3 + 1];
-            let r = self.pixel_data.data[i * 3 + 2];
-
-            tuple_data.push((b, g, r));
-        }
-
-        tuple_data
-    }
-
-    // private function to convert tuple data to pixel data for 24-bit bmps
-    fn from_tuple_data(&mut self, tuple_data: Vec<(u8, u8, u8)>) {
-        for (i, pixel) in tuple_data.iter().enumerate() {
-            let (b, g, r) = *pixel;
-
-            self.pixel_data.data[i * 3] = b;
-            self.pixel_data.data[i * 3 + 1] = g;
-            self.pixel_data.data[i * 3 + 2] = r;
-        }
-    }
-
     /// Converts the image to greyscale.
     /// 
     /// # Examples
@@ -304,14 +277,28 @@ impl Bmp {
     /// }
     /// ```
     pub fn to_greyscale(&mut self) {
-        let tuple_data = self.to_tuple_data();
+        // let tuple_data = self.to_tuple_data();
 
-        for (i, pixel) in tuple_data.iter().enumerate() {
-            let (b, g, r) = rgb_to_greyscale(*pixel);
+        // for (i, pixel) in tuple_data.iter().enumerate() {
+        //     let (b, g, r) = rgb_to_greyscale(*pixel);
 
-            self.pixel_data.data[i * 3] = b;
-            self.pixel_data.data[i * 3 + 1] = g;
-            self.pixel_data.data[i * 3 + 2] = r;
+        //     self.pixel_data.data[i * 3] = b;
+        //     self.pixel_data.data[i * 3 + 1] = g;
+        //     self.pixel_data.data[i * 3 + 2] = r;
+        // }
+
+        let width = u32::from_le_bytes(self.info_header.width);
+        let height = u32::from_le_bytes(self.info_header.height);
+
+        for i in (0..=width - 1).rev(){
+            for j in 0..=height - 1 {
+                let index = (i + width * j) as usize;
+                let (b, g, r) = rgb_to_greyscale((self.pixel_data.data[index * 3], self.pixel_data.data[index * 3 + 1], self.pixel_data.data[index * 3 + 2]));
+
+                self.pixel_data.data[index * 3] = b;
+                self.pixel_data.data[index * 3 + 1] = g;
+                self.pixel_data.data[index * 3 + 2] = r;
+            }
         }
     }
         
@@ -346,9 +333,9 @@ impl Bmp {
         let curr_padding = round_up_to_multiple_of_four(width * 3) - (width * 3);
         let new_padding = round_up_to_multiple_of_four(height * 3) - (height * 3);
 
-        for i in (1..=width).rev() {
+        for i in (0..=width - 1).rev() {
             for j in 0..=(height - 1) {
-                let index = ((i - 1) + width * j) as usize;
+                let index = (i + width * j) as usize;
                 new_pixel_data.push(self.pixel_data.data[index * 3 + (curr_padding * j) as usize]);
                 new_pixel_data.push(self.pixel_data.data[index * 3 + 1 + (curr_padding * j) as usize]);
                 new_pixel_data.push(self.pixel_data.data[index * 3 + 2 + (curr_padding * j) as usize]);
@@ -443,17 +430,26 @@ impl Bmp {
         let width = u32::from_le_bytes(self.info_header.width);
         let height = u32::from_le_bytes(self.info_header.height);
 
-        let tuple_data = self.to_tuple_data();
-        let mut new_tuple_data: Vec<(u8, u8, u8)> = Vec::new();
+        let mut new_pixel_data = Vec::new();
+
+        let curr_padding = round_up_to_multiple_of_four(width * 3) - (width * 3);
 
         for i in 0..=height - 1 {
             for j in (1..=width).rev() {
                 let index = ((j - 1) + width * i) as usize;
-                new_tuple_data.push(tuple_data[index]);
+                new_pixel_data.push(self.pixel_data.data[index * 3 + (curr_padding * i) as usize]);
+                new_pixel_data.push(self.pixel_data.data[index * 3 + 1 + (curr_padding * i) as usize]);
+                new_pixel_data.push(self.pixel_data.data[index * 3 + 2 + (curr_padding * i) as usize]);
+            }
+
+            for _j in 0..curr_padding {
+                new_pixel_data.push(0);
             }
         }
 
-        self.from_tuple_data(new_tuple_data);
+        self.pixel_data.data = new_pixel_data;
+
+
     }
 
 }

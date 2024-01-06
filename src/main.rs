@@ -13,8 +13,9 @@ fn main() -> io::Result<()> {
     let mut bmp2 = Bmp::build_from_file(&mut file)?;
 
     
+    bmp2.to_greyscale();
     bmp2.rotate_270();
-    // bmp2.rotate_90_raw();
+    // bmp2.flip_hor();
     bmp2.write_to_file("test2")?;
 
     Ok(())
