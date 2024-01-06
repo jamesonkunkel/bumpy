@@ -253,6 +253,7 @@ impl Bmp {
     }
 
     // private function to convert pixel data to tuple data for 24-bit bmps
+    // should account for padding and just strip it out before we regenerate pixel data
     fn to_tuple_data(&self) -> Vec<(u8, u8, u8)> {
         let mut tuple_data = Vec::new();
 
@@ -364,6 +365,8 @@ impl Bmp {
         let width = u32::from_le_bytes(self.info_header.width);
         let height = u32::from_le_bytes(self.info_header.height);
 
+        let padding_length = round_up_to_multiple_of_four(height * 3) - (height * 3);
+
         for i in (1..=width).rev() {
             for j in 0..=(height - 1) {
                 let index = ((i - 1) + width * j) as usize;
@@ -379,6 +382,39 @@ impl Bmp {
         self.info_header.height = width;
 
         self.from_tuple_data(new_tuple_data);
+    }
+
+
+    // rotate 90 but without converting to tuple data and while accounting for padding
+    pub fn rotate_90_raw(&mut self){
+        let width = u32::from_le_bytes(self.info_header.width);
+        let height = u32::from_le_bytes(self.info_header.height);
+
+        let mut new_pixel_data = Vec::new();
+
+        let curr_padding = round_up_to_multiple_of_four(width * 3) - (width * 3);
+
+        for i in (1..=width).rev() {
+            for j in 0..=(height - 1) {
+                let index = ((i - 1) + width * j) as usize;
+                new_pixel_data.push(self.pixel_data.data[index * 3 + (curr_padding * j) as usize]);
+                new_pixel_data.push(self.pixel_data.data[index * 3 + 1 + (curr_padding * j) as usize]);
+                new_pixel_data.push(self.pixel_data.data[index * 3 + 2 + (curr_padding * j) as usize]);
+            }
+
+            for _j in 0..round_up_to_multiple_of_four(height * 3) - (height * 3) {
+                new_pixel_data.push(0);
+            }
+        }
+
+        // swap width and height
+        let width = self.info_header.width;
+        let height = self.info_header.height;
+
+        self.info_header.width = height;
+        self.info_header.height = width;
+
+        self.pixel_data.data = new_pixel_data;
     }
     
     /// Rotates image 270 degrees clockwise.
@@ -463,5 +499,10 @@ fn rgb_to_greyscale(bgr: (u8, u8, u8)) -> (u8, u8, u8) {
     let grey_value = (0.299 * f64::from(r) + 0.587 * f64::from(g) + 0.114 * f64::from(b)).round() as u8;
 
     (grey_value, grey_value, grey_value)
+}
+
+
+fn round_up_to_multiple_of_four(value: u32) -> u32 {
+    ((value + 3) / 4) * 4
 }
 
