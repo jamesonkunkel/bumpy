@@ -2,28 +2,34 @@ use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom, Write};
 use crate::bmp::bmp_info_header::BmpInfoHeader;
 
-/// Builds a `BmpColorTable` struct from a file and the corresponding `BmpInfoHeader`.
-///
-/// # Arguments
-///
-/// * `file` - A mutable reference to a `File` object.
-/// * `info_header` - A reference to the corresponding `BmpInfoHeader`.
-///
-/// # Returns
-///
-/// Returns a `Result` containing the `BmpColorTable` if successful, or an `io::Error` if an error occurred.
+/// A struct representing the BMP color table.
 pub struct BmpColourTable {
     pub data: Vec<(u8, u8, u8, u8)>
 }
 
 impl BmpColourTable {
 
+    /// Creates a new `BmpColorTable` struct.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `BmpColorTable` struct.
     pub fn new() -> Self {
         BmpColourTable {
             data: Vec::new()
         }
     }
 
+    /// Builds a `BmpColorTable` struct from a file and the corresponding `BmpInfoHeader`.
+    ///
+    /// # Arguments
+    ///
+    /// * `file` - A mutable reference to a `File` object.
+    /// * `info_header` - A reference to the corresponding `BmpInfoHeader`.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the `BmpColorTable` if successful, or an `io::Error` if an error occurred.
     pub fn build_from_file(file: &mut File, info_header: &BmpInfoHeader) -> io::Result<Self> {
         let color_table_size = u32::from_le_bytes(info_header.colours_used) * 4;
 
@@ -46,6 +52,15 @@ impl BmpColourTable {
         Ok(color_table)
     }
 
+    /// Writes the `BmpColorTable` to a file.
+    ///     
+    /// # Arguments
+    ///     
+    /// * `file` - A mutable reference to a `File` object.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `Result` containing `()` if successful, or an `io::Error` if an error occurred.
     pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
         for (r, g, b, a) in &self.data {
             file.write(&[*b, *g, *r, *a])?;

@@ -1,16 +1,7 @@
 use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom, Write};
 
-/// Builds a `BmpInfoHeader` struct from a file.
-///
-/// # Arguments
-///
-/// * `file` - A mutable reference to a `File` object.
-///
-/// # Returns
-///
-/// Returns a `Result` containing the `BmpInfoHeader` if successful, or an `io::Error` if an error occurred.
-
+/// A struct representing the BMP info header.
 #[repr(C)]
 pub struct BmpInfoHeader {
     pub size: [u8; 4],
@@ -28,6 +19,16 @@ pub struct BmpInfoHeader {
 
 impl BmpInfoHeader {
 
+    /// Creates a new `BmpInfoHeader` struct.
+    ///
+    /// # Arguments
+    /// 
+    /// * `width` - The width of the image in pixels.
+    /// * `height` - The height of the image in pixels.
+    /// 
+    /// # Returns
+    ///     
+    /// Returns a `BmpInfoHeader` struct.
     pub fn new(width: u32, height: u32) -> Self {
 
         let width = u32::to_le_bytes(width);
@@ -47,7 +48,15 @@ impl BmpInfoHeader {
             important_colours: [0, 0, 0, 0]
         }
     }
-
+    /// Builds a `BmpInfoHeader` struct from a file.
+    ///
+    /// # Arguments
+    ///
+    /// * `file` - A mutable reference to a `File` object.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the `BmpInfoHeader` if successful, or an `io::Error` if an error occurred.
     pub fn build_from_file(file: &mut File) -> io::Result<Self> {
         let mut info_header = BmpInfoHeader {
             size: [0; 4],
@@ -80,6 +89,15 @@ impl BmpInfoHeader {
         Ok(info_header)
     }
 
+    /// Writes the `BmpInfoHeader` to a file.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `file` - A mutable reference to a `File` object.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `Result` containing `()` if successful, or an `io::Error` if an error occurred.
     pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
         file.write(&self.size)?;
         file.write(&self.width)?;

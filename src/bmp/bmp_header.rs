@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{self, Read, Write};
 
+// A struct representing the BMP file header.
 #[repr(C)]
 pub struct BmpHeader {
     pub signature: [u8; 2],
@@ -11,6 +12,16 @@ pub struct BmpHeader {
 
 impl BmpHeader {
 
+    /// Creates a new `BmpHeader` struct.
+    ///     
+    /// # Arguments
+    /// 
+    /// * `width` - The width of the image in pixels.
+    /// * `height` - The height of the image in pixels.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `BmpHeader` struct.
     pub fn new(width: u32, height: u32) -> Self {
         let file_size = u32::to_le_bytes((width * height * 3) + 54);
 
@@ -22,6 +33,15 @@ impl BmpHeader {
         }
     }
 
+    /// Builds a `BmpHeader` struct from a file.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `file` - A mutable reference to a `File` object.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `Result` containing the `BmpHeader` if successful, or an `io::Error` if an error occurred.
     pub fn build_from_file(file: &mut File) -> io::Result<Self> {
         let mut header = BmpHeader {
             signature: [0; 2],
@@ -39,6 +59,15 @@ impl BmpHeader {
         Ok(header)
     }
 
+    /// Writes the `BmpHeader` to a file.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `file` - A mutable reference to a `File` object.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `Result` containing `()` if successful, or an `io::Error` if an error occurred.
     pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
         file.write(&self.signature)?;
         file.write(&self.file_size)?;

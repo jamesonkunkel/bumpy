@@ -1,7 +1,7 @@
-mod bmp_header;
-mod bmp_info_header;
-mod bmp_colour_table;
-mod bmp_pixel_data_24_bit;
+pub mod bmp_header;
+pub mod bmp_info_header;
+pub mod bmp_colour_table;
+pub mod bmp_pixel_data;
 mod utils;
 
 //standard library imports
@@ -12,7 +12,7 @@ use std::io;
 use bmp_header::BmpHeader;
 use bmp_info_header::BmpInfoHeader;
 use bmp_colour_table::BmpColourTable;
-use bmp_pixel_data_24_bit::BmpPixelData24Bit;
+use bmp_pixel_data::BmpPixelData;
 
 //import utils
 use utils::{round_up_to_multiple_of_four, rgb_to_greyscale};
@@ -22,7 +22,7 @@ pub struct Bmp {
     pub header: BmpHeader,
     pub info_header: BmpInfoHeader,
     pub colour_table: BmpColourTable,
-    pub pixel_data: BmpPixelData24Bit
+    pub pixel_data: BmpPixelData
 }
 
 impl Bmp {
@@ -45,7 +45,7 @@ impl Bmp {
         let header = BmpHeader::new(width, height);
         let info_header = BmpInfoHeader::new(width, height);
         let colour_table = BmpColourTable::new();
-        let pixel_data = BmpPixelData24Bit::new(width, height);
+        let pixel_data = BmpPixelData::new(width, height);
 
         Bmp {
             header,
@@ -83,9 +83,11 @@ impl Bmp {
         let header = BmpHeader::build_from_file(file)?;
         let info_header = BmpInfoHeader::build_from_file(file)?;
         let colour_table = BmpColourTable::build_from_file(file, &info_header)?;
-        let pixel_data = BmpPixelData24Bit::build_from_file(file, &header.data_offset)?;
+        let pixel_data = BmpPixelData::build_from_file(file, &header.data_offset)?;
 
-        if u16::from_le_bytes(info_header.bits_per_px) != 24 {
+        let bits_per_px = u16::from_le_bytes(info_header.bits_per_px);
+
+        if bits_per_px != 24 && bits_per_px != 8{
             return Err(io::Error::new(io::ErrorKind::InvalidData, "Only 24-bit .bmp files are supported"));
         }
 
@@ -96,12 +98,6 @@ impl Bmp {
             pixel_data
         })
     }
-
-    // pub fn new(width: u32, height: u32, colour: (u8, u8, u8)) -> Self {
-    //     let new_bmp: Bmp = Bmp {
-
-    //     }
-    // }
 
     /// Prints the contents of the `Bmp` struct to the console.
     ///     
@@ -158,6 +154,9 @@ impl Bmp {
 
         if with_pixel_data {
             println!("BMP Pixel Data:");
+            for (i, pixel) in self.pixel_data.data.iter().enumerate() {
+                println!("Entry {}: {:?}", i, pixel);
+            }
         }
         
     }
@@ -277,16 +276,18 @@ impl Bmp {
     /// }
     /// ```
     pub fn to_greyscale(&mut self) {
-        // let tuple_data = self.to_tuple_data();
+        let bits_per_px = u16::from_le_bytes(self.info_header.bits_per_px);
 
-        // for (i, pixel) in tuple_data.iter().enumerate() {
-        //     let (b, g, r) = rgb_to_greyscale(*pixel);
+        if bits_per_px == 24 {
+            self.to_greyscale_24();
+        }
+        else {
+            panic!("Only 24-bit .bmp files are supported");
+        }
+    }
 
-        //     self.pixel_data.data[i * 3] = b;
-        //     self.pixel_data.data[i * 3 + 1] = g;
-        //     self.pixel_data.data[i * 3 + 2] = r;
-        // }
-
+    // 24 bit function definition for greyscale conversion
+    fn to_greyscale_24(&mut self){
         let width = u32::from_le_bytes(self.info_header.width);
         let height = u32::from_le_bytes(self.info_header.height);
 
@@ -301,8 +302,6 @@ impl Bmp {
             }
         }
     }
-        
-
 
     /// Rotates image 90 degrees clockwise.
     /// 
@@ -325,6 +324,51 @@ impl Bmp {
     /// }
     /// ```
     pub fn rotate_90(&mut self){
+        let bits_per_px = u16::from_le_bytes(self.info_header.bits_per_px);
+
+        if bits_per_px == 8 {
+            self.rotate_90_8();
+        }
+        else if bits_per_px == 24 {
+            self.rotate_90_24();
+        }
+        else {
+            panic!("Only 24-bit .bmp files are supported");
+        }
+    }
+
+    fn rotate_90_8(&mut self){
+        let width = u32::from_le_bytes(self.info_header.width);
+        let height = u32::from_le_bytes(self.info_header.height);
+
+        let mut new_pixel_data = Vec::new();
+
+        let curr_padding = round_up_to_multiple_of_four(width) - (width);
+        let new_padding = round_up_to_multiple_of_four(height) - (height);
+
+        for i in (0..=width - 1).rev() {
+            for j in 0..=(height - 1) {
+                let index = (i + width * j) as usize;
+                new_pixel_data.push(self.pixel_data.data[index + (curr_padding * j) as usize]);
+            }
+
+            for _j in 0..new_padding {
+                new_pixel_data.push(0);
+            }
+        }
+
+        // swap width and height
+        let width = self.info_header.width;
+        let height = self.info_header.height;
+
+        self.info_header.width = height;
+        self.info_header.height = width;
+
+        self.pixel_data.data = new_pixel_data;
+    }
+
+    //24 bit function definition for 90 degree rotation
+    fn rotate_90_24(&mut self){
         let width = u32::from_le_bytes(self.info_header.width);
         let height = u32::from_le_bytes(self.info_header.height);
 
@@ -377,8 +421,19 @@ impl Bmp {
     /// }
     /// ```
     pub fn rotate_180(&mut self){
-        self.rotate_90();
-        self.rotate_90();
+        let bits_per_px = u16::from_le_bytes(self.info_header.bits_per_px);
+        
+        if bits_per_px == 8 {
+            self.rotate_90_8();
+            self.rotate_90_8();
+        }
+        else if bits_per_px == 24 {
+            self.rotate_90_24();
+            self.rotate_90_24();
+        }
+        else {
+            panic!("Only 24-bit .bmp files are supported");
+        }
     }
 
     /// Rotates image 270 degrees clockwise.
@@ -402,8 +457,21 @@ impl Bmp {
     /// }
     /// ```
     pub fn rotate_270(&mut self){
-        self.rotate_180();
-        self.rotate_90();
+        let bits_per_px = u16::from_le_bytes(self.info_header.bits_per_px);
+
+        if bits_per_px == 8 {
+            self.rotate_90_8();
+            self.rotate_90_8();
+            self.rotate_90_8();
+        }
+        else if bits_per_px == 24 {
+            self.rotate_90_24();
+            self.rotate_90_24();
+            self.rotate_90_24();
+        }
+        else {
+            panic!("Only 24-bit .bmp files are supported");
+        }
     }
 
     /// Mirrors image along horizontal axis

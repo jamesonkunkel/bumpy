@@ -4,19 +4,13 @@ use bumpy::bmp::Bmp;
 
 fn main() -> io::Result<()> {
 
-    let mut bmp = Bmp::new(177, 69);
+    let mut file = File::open("sample2.bmp")?;
+    let mut bmp = Bmp::build_from_file(&mut file)?;
 
-    bmp.rotate_90();
+    bmp.rotate_270();
+    bmp.print_all(true, true);
+
     bmp.write_to_file("test")?;
-
-    let mut file = File::open("sample5.bmp")?;
-    let mut bmp2 = Bmp::build_from_file(&mut file)?;
-
-    
-    bmp2.to_greyscale();
-    bmp2.rotate_270();
-    // bmp2.flip_hor();
-    bmp2.write_to_file("test2")?;
 
     Ok(())
 }

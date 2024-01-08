@@ -3,29 +3,25 @@ use crate::bmp::utils::round_up_to_multiple_of_four;
 use std::fs::File;
 use std::io::{self, Write, Read, Seek, SeekFrom};
 
-
-/// Builds a `BmpPixelData24Bit` struct from a file and the corresponding `BmpInfoHeader`.
-///     
-/// # Arguments
-/// 
-/// * `file` - A mutable reference to a `File` object.
-/// * `info_header` - A reference to the corresponding `BmpInfoHeader`.
-/// 
-/// # Returns
-/// 
-/// Returns a `Result` containing the `BmpPixelData24Bit` if successful, or an `io::Error` if an error occurred.
-/// Only supporting 24-bit pixel data for now
-
-pub struct BmpPixelData24Bit {
+// A struct representing the BMP pixel data.
+pub struct BmpPixelData {
     pub data: Vec<u8>,
 }
 
-impl BmpPixelData24Bit {
+impl BmpPixelData {
 
+    /// Creates a new `BmpPixelData` struct.
+    ///     
+    /// # Arguments
+    /// 
+    /// * `width` - The width of the image in pixels.
+    /// * `height` - The height of the image in pixels.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `BmpPixelData` struct.
     pub fn new(width: u32, height: u32) -> Self {
         let padding_length = round_up_to_multiple_of_four(width * 3) - (width * 3);
-
-        println!("Padding length: {}", padding_length);
 
         let mut data = Vec::new();
 
@@ -43,18 +39,29 @@ impl BmpPixelData24Bit {
             }
         }
 
-        BmpPixelData24Bit {
+        BmpPixelData {
             data
         }
 
     }
 
+    /// Builds a `BmpPixelData` struct from a file and the corresponding `BmpInfoHeader`.
+    ///     
+    /// # Arguments
+    /// 
+    /// * `file` - A mutable reference to a `File` object.
+    /// * `info_header` - A reference to the corresponding `BmpInfoHeader`.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `Result` containing the `BmpPixelData` if successful, or an `io::Error` if an error occurred.
+    /// Only supporting 24-bit pixel data for now
     pub fn build_from_file(file: &mut File, data_offset: &[u8; 4]) -> io::Result<Self> {
         // Move the file cursor to the start of the pixel data
         let data_offset = u32::from_le_bytes(*data_offset) as u64;
         file.seek(SeekFrom::Start(data_offset))?;
 
-        let mut pixel_data = BmpPixelData24Bit {
+        let mut pixel_data = BmpPixelData {
             data: Vec::new(),
         };
 
@@ -63,6 +70,15 @@ impl BmpPixelData24Bit {
         Ok(pixel_data)
     }
 
+    /// Writes the `BmpPixelData` to a file.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `file` - A mutable reference to a `File` object.
+    /// 
+    /// # Returns
+    /// 
+    /// Returns a `Result` containing `()` if successful, or an `io::Error` if an error occurred.
     pub fn write_to_file(&self, file: &mut File) -> io::Result<()> {
         file.write(&self.data)?;
 
@@ -72,9 +88,9 @@ impl BmpPixelData24Bit {
     }
 }
 
-impl Clone for BmpPixelData24Bit {
+impl Clone for BmpPixelData {
     fn clone(&self) -> Self {
-        BmpPixelData24Bit {
+        BmpPixelData {
             data: self.data.clone(),
         }
     }
