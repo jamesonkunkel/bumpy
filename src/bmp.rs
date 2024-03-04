@@ -88,7 +88,7 @@ impl Bmp {
         let bits_per_px = u16::from_le_bytes(info_header.bits_per_px);
 
         if bits_per_px != 24 && bits_per_px != 8{
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Only 24-bit .bmp files are supported"));
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Only 24-bit or 8-bit .bmp files are supported"));
         }
 
         Ok(Bmp {

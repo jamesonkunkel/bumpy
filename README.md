@@ -10,7 +10,8 @@ bumpy = "0.0.2"
 ```
 
 ## Features
-Currently supports reading .bmp files into a mutable struct, performing manipulations on the image such as greyscaling, rotation, or mirroring the image, and then writing the struct to a bitmap file. Also support generating a 24 bit bitmap file of given width and height.
+
+Currently supports reading 24-bit and 8-bit .bmp files into a mutable struct, performing manipulations on the image such as greyscaling, rotation, or mirroring the image, and then writing the struct to a bitmap file. Also support generating a 24 bit bitmap file of given width and height.
 
 ## Example
 
