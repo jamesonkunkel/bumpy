@@ -1,14 +1,12 @@
 Work-in-progress Rust library for reading and manipulating bitmap (.bmp) files. Documentation [here](https://docs.rs/bumpy).
 
-
-
 ## Usage
 
 Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bumpy = "0.0.2"
+bumpy = "0.0.5"
 ```
 
 ## Features
