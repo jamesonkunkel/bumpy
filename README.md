@@ -1,4 +1,6 @@
-Work-in-progress Rust library for reading and manipulating bitmap (.bmp) files.
+Work-in-progress Rust library for reading and manipulating bitmap (.bmp) files. Documentation [here](https://docs.rs/bumpy).
+
+
 
 ## Usage
 
